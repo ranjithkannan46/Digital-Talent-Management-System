@@ -1,0 +1,92 @@
+/* ============================================================
+   TalentOS Global Styles
+   Gaming-inspired dark UI — neon cyan / violet palette
+   ============================================================ */
+
+:root {
+  --bg-base: #080b10;
+  --bg-surface: #0d1117;
+  --bg-card: #111820;
+  --bg-elevated: #161e2a;
+
+  --neon-cyan: #00e5ff;
+  --neon-violet: #9d4edd;
+  --neon-green: #39ff14;
+  --neon-pink: #ff2d78;
+
+  --text-primary: #e8f0fe;
+  --text-secondary: #7a8fad;
+  --text-muted: #3d4f63;
+
+  --border-subtle: rgba(0, 229, 255, 0.08);
+  --border-active: rgba(0, 229, 255, 0.35);
+
+  --font-display: "Exo 2", sans-serif;
+  --font-ui: "Rajdhani", sans-serif;
+  --font-mono: "Share Tech Mono", monospace;
+
+  --radius: 6px;
+  --radius-lg: 12px;
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--neon-cyan); opacity: 0.3; border-radius: 3px; }
+
+/* Selection */
+::selection {
+  background: rgba(0, 229, 255, 0.2);
+  color: var(--neon-cyan);
+}
+
+a {
+  color: var(--neon-cyan);
+  text-decoration: none;
+}
+
+input, button, textarea {
+  font-family: inherit;
+}
+
+/* Global background grid pattern */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 229, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
