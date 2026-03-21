@@ -6,21 +6,18 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Attach token on every request automatically
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("talent_token");
+  const token = localStorage.getItem("dtms_token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Handle 401s globally — clear stale tokens
 api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem("talent_token");
-      localStorage.removeItem("talent_user");
-      // Let the component handle the redirect
+      localStorage.removeItem("dtms_token");
+      localStorage.removeItem("dtms_user");
     }
     return Promise.reject(err);
   }
