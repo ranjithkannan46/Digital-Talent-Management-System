@@ -1,36 +1,23 @@
-require("dotenv").config();
 const express = require("express");
-const cors = require("cors");
+const cors    = require("cors");
+require("dotenv").config();
 
-const authRoutes = require("./src/routes/auth.routes");
+const authRoutes         = require("./src/routes/auth.routes");
+const taskRoutes         = require("./src/routes/task.routes");
+const notificationRoutes = require("./src/routes/notification.routes");
 
-const app = express();
+const app  = express();
 const PORT = process.env.PORT || 5000;
 
-// --- Middleware ---
-app.use(cors({
-  origin: process.env.NODE_ENV === "production" ? "https://yourdomain.com" : "http://localhost:5173",
-  credentials: true,
-}));
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 
-// --- Routes ---
-app.get("/api/health", (_, res) => res.json({ status: "ok", ts: Date.now() }));
-app.use("/api/auth", authRoutes);
+app.get("/api/health", (_, res) => res.json({ status:"ok", ts:Date.now() }));
+app.use("/api/auth",          authRoutes);
+app.use("/api/tasks",         taskRoutes);
+app.use("/api/notifications",  notificationRoutes);
 
-// --- 404 handler ---
-app.use((_, res) => {
-  res.status(404).json({ message: "Route not found." });
-});
+app.use((req, res) => res.status(404).json({ message:"Route not found." }));
+app.use((err, req, res, next) => { console.error("[error]",err); res.status(500).json({ message:"Internal server error." }); });
 
-// --- Global error handler ---
-app.use((err, req, res, next) => {
-  console.error("[unhandled]", err);
-  res.status(500).json({ message: "An unexpected error occurred." });
-});
-
-app.listen(PORT, () => {
-  console.log(`\n🎮 Talent System API running on http://localhost:${PORT}`);
-  console.log(`   Environment: ${process.env.NODE_ENV || "development"}\n`);
-});
+app.listen(PORT, () => console.log(`🚀 DTMS API → http://localhost:${PORT}`));
