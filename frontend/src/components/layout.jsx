@@ -32,7 +32,7 @@ body{font-family:'Inter',sans-serif;background:#0b0e1a;color:#e2e8f0;-webkit-fon
   background:linear-gradient(135deg,#6366f1,#4f46e5);
   border-radius:9px;display:grid;place-items:center;
   font-size:.58rem;font-weight:800;color:#fff;letter-spacing:.04em;
-  flex-shrink:0;box-shadow:0 4px 12px rgba(99,102,241,.4);
+  flex-shrink:0;box-shadow:0 4px 12px rgba(17, 20, 177, 0.4);
 }
 .L-sb-name{font-size:.68rem;font-weight:600;color:rgba(255,255,255,.45);line-height:1.4;}
 

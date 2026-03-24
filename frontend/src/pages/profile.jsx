@@ -22,7 +22,7 @@ const CSS = `
   border-radius:50%;display:grid;place-items:center;
   font-size:1.75rem;font-weight:700;color:#fff;
   overflow:hidden;
-  box-shadow:0 6px 20px rgba(22,163,74,.35);
+  box-shadow:0 6px 20px rgba(36, 173, 236, 0.35);
   cursor:pointer;position:relative;
 }
 .P-av img{width:100%;height:100%;object-fit:cover;}

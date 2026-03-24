@@ -95,6 +95,7 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  border-radius: 16px !important;
 }
 
 /* Hero */
@@ -280,7 +281,7 @@
   letter-spacing: 0.18em;
   color: var(--neon-green);
   background: rgba(57, 255, 20, 0.08);
-  border: 1px solid rgba(57, 255, 20, 0.2);
+  border: 1px solid rgba(45, 255, 8, 0.2);
   padding: 0.2rem 0.6rem;
   border-radius: 2px;
 }
