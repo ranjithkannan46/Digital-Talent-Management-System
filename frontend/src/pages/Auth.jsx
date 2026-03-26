@@ -10,7 +10,7 @@ const injectStyles = () => {
   s.textContent = `
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600;700;800&display=swap');
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family:'Inter',system-ui,sans-serif; background:#061409; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1.5rem; -webkit-font-smoothing:antialiased; }
+    body { font-family:'Inter',system-ui,sans-serif; background:#061409; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1rem; -webkit-font-smoothing:antialiased; }
 
     .toast { position:fixed; top:1.5rem; left:50%; transform:translateX(-50%); z-index:9999; display:flex; align-items:center; gap:.65rem; padding:.85rem 1.4rem; background:#0a2a10; border:1px solid rgba(74,222,128,.3); border-radius:12px; font-size:.83rem; font-weight:500; color:#86efac; box-shadow:0 8px 32px rgba(0,0,0,.5); animation:toastIn .35s cubic-bezier(.22,1,.36,1) both; white-space:nowrap; }
     .toast-icon { width:20px; height:20px; background:rgba(74,222,128,.15); border-radius:50%; display:grid; place-items:center; font-size:.7rem; }
@@ -51,7 +51,7 @@ const injectStyles = () => {
     .modal-btn { background:#4f46e5; border:none; border-radius:8px; padding:.6rem 1.4rem; color:#fff; font-family:'Inter',sans-serif; font-size:.82rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:.4rem; transition:all 180ms; box-shadow:0 3px 12px rgba(21,128,61,.3); }
     .modal-btn:hover { background:#4338ca; transform:translateY(-1px); }
 
-    .wrap { display:grid; grid-template-columns:1fr 460px; width:100%; max-width:1080px; min-height:680px; border-radius:22px; overflow:hidden; box-shadow:0 0 0 1px rgba(74,222,128,.08), 0 48px 120px rgba(0,0,0,.6); animation:rise .55s cubic-bezier(.22,1,.36,1) both; }
+    .wrap { display:grid; grid-template-columns:1fr 480px; width:100%; max-width:1160px; min-height:720px; border-radius:22px; overflow:hidden; box-shadow:0 0 0 1px rgba(74,222,128,.08), 0 48px 120px rgba(0,0,0,.6); animation:rise .55s cubic-bezier(.22,1,.36,1) both; }
     @keyframes rise { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
 
     .left { position:relative; overflow:hidden; background:#061409; }
@@ -97,8 +97,8 @@ const injectStyles = () => {
     .left-title { font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:700;color:#f0fff4;line-height:1.08;letter-spacing:-.02em; }
     .left-title em { font-style:italic;color:#4ade80; }
 
-    .right { background:#0f2318; display:flex; flex-direction:column; justify-content:flex-start; padding:2rem 2.75rem 2.5rem; border-left:1px solid rgba(74,222,128,.08); overflow-y:auto; }
-    .r-title { font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:700;color:#f0fff4;line-height:1.1;letter-spacing:-.02em;margin-bottom:.35rem; }
+    .right { background:#0f2318; display:flex; flex-direction:column; justify-content:flex-start; padding:2.25rem 3rem 2.5rem; border-left:1px solid rgba(74,222,128,.08); overflow-y:auto; }
+    .r-title { font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:700;color:#f0fff4;line-height:1.1;letter-spacing:-.02em;margin-bottom:.35rem; }
     .r-sub { font-size:.79rem;color:rgba(255,255,255,.4);margin-bottom:1.5rem;display:flex;align-items:center;gap:5px; }
     .r-sub button { background:none;border:none;font-family:inherit;font-size:inherit;color:#4ade80;cursor:pointer;padding:0;font-weight:500;transition:color 150ms; }
     .r-sub button:hover { color:#86efac; }
@@ -109,7 +109,7 @@ const injectStyles = () => {
     .fields { display:flex;flex-direction:column;gap:.8rem; }
     .two-col { display:grid;grid-template-columns:1fr 1fr;gap:.8rem; }
     .f-label { font-size:.71rem;font-weight:500;color:rgba(255,255,255,.45);margin-bottom:.3rem;display:block; }
-    .input { background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:.78rem .9rem;color:#f0fff4;font-family:'Inter',sans-serif;font-size:.9rem;outline:none;width:100%;transition:all 200ms; }
+    .input { background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:.85rem .95rem;color:#f0fff4;font-family:'Inter',sans-serif;font-size:.9rem;outline:none;width:100%;transition:all 200ms; }
     .input::placeholder { color:rgba(255,255,255,.2); }
     .input:focus { border-color:rgba(74,222,128,.5);background:rgba(255,255,255,.08);box-shadow:0 0 0 3px rgba(74,222,128,.1); }
     .input:disabled { opacity:.4;cursor:not-allowed; }
@@ -136,7 +136,7 @@ const injectStyles = () => {
     .check-box svg { display:none; } .check-box.on svg { display:block; }
     .check-label { font-size:.75rem;color:rgba(255,255,255,.4); }
     .check-label button { background:none;border:none;font-family:inherit;font-size:inherit;color:#4ade80;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px; }
-    .btn-main { width:100%;padding:.82rem;background:#15803d;border:none;border-radius:10px;color:#fff;font-family:'Inter',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 220ms;box-shadow:0 4px 20px rgba(21,128,61,.4); }
+    .btn-main { width:100%;padding:.9rem;background:#15803d;border:none;border-radius:10px;color:#fff;font-family:'Inter',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 220ms;box-shadow:0 4px 20px rgba(21,128,61,.4); }
     .btn-main:hover:not(:disabled) { background:#166534;transform:translateY(-1px);box-shadow:0 8px 28px rgba(22,101,52,.5); }
     .btn-main:active:not(:disabled) { transform:none; }
     .btn-main:disabled { opacity:.35;cursor:not-allowed; }
@@ -385,7 +385,7 @@ export default function Auth() {
     try{
       const{data}=await axios.post("/api/auth/login",{email:siEmail.trim(),password:siPass});
       localStorage.setItem("dtms_token",data.token);localStorage.setItem("dtms_user",JSON.stringify(data.user));
-      setToast("Login successful! Redirecting...");setTimeout(()=>navigate("/dashboard"),1200);
+      setToast("Login successful! Redirecting...");setTimeout(()=>{window.location.href="/dashboard";},900);
     }catch(ex){setErr(ex.response?.data?.message||"Incorrect email or password.");}
     finally{setBusy(false);}
   };
@@ -411,7 +411,7 @@ export default function Auth() {
     try{
       const{data}=await axios.post("/api/auth/register",pendingData);
       localStorage.setItem("dtms_token",data.token);localStorage.setItem("dtms_user",JSON.stringify(data.user));
-      setToast("Account created! Welcome to DTMS.");setTimeout(()=>navigate("/dashboard"),1400);
+      setToast("Account created! Welcome to DTMS.");setTimeout(()=>{window.location.href="/dashboard";},1000);
     }catch(ex){setErr(ex.response?.data?.message||"Could not create account.");}
     finally{setBusy(false);}
   };
@@ -445,7 +445,7 @@ export default function Auth() {
       const{displayName,email,uid}=result.user;
       const{data}=await axios.post("/api/auth/google",{name:displayName||email.split("@")[0],email,uid});
       localStorage.setItem("dtms_token",data.token);localStorage.setItem("dtms_user",JSON.stringify(data.user));
-      setToast("Signed in with Google!");setTimeout(()=>navigate("/dashboard"),1200);
+      setToast("Signed in with Google!");setTimeout(()=>{window.location.href="/dashboard";},900);
     }catch(ex){
       if(ex.code==="auth/popup-closed-by-user"||ex.code==="auth/cancelled-popup-request")return;
       setErr(ex.response?.data?.message||ex.message||"Google sign-in failed.");
@@ -494,7 +494,7 @@ export default function Auth() {
           {screen==="signin"&&(
             <div className="in">
               <div style={{marginBottom:"1.5rem",paddingTop:".25rem"}}>
-                <h2 style={{fontFamily:"'Inter',sans-serif",fontSize:"1.75rem",fontWeight:800,color:"#ffffff",letterSpacing:"-.03em",lineHeight:1.1,marginBottom:".75rem"}}>Digital Talent<br/>Management System</h2>
+                <h2 style={{fontFamily:"'Inter',sans-serif",fontSize:"2rem",fontWeight:800,color:"#ffffff",letterSpacing:"-.03em",lineHeight:1.1,marginBottom:".85rem"}}>Digital Talent<br/>Management System</h2>
                 <div style={{height:"1px",background:"rgba(255,255,255,0.15)",width:"100%"}}/>
               </div>
               <p className="r-title">Welcome back</p>
