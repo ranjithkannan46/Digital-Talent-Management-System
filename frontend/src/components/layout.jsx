@@ -60,6 +60,21 @@ body{font-family:'Inter',sans-serif;background:#0c0f1a;color:#e2e8f0;-webkit-fon
 @media(max-width:768px){.sidebar{display:none;}.app-main{margin-left:0;}}
 `;
 
+// Inject styles immediately on module load (prevents flash on navigation)
+(() => {
+  if (typeof document !== 'undefined' && !document.getElementById('layout-css')) {
+    const _s = document.createElement('style');
+    _s.id = 'layout-css';
+    _s.textContent = CSS;
+    document.head.appendChild(_s);
+  }
+})();
+
+
+// Inject CSS immediately at module load
+(function(){
+    }());
+
 const timeAgo = d => { const m=Math.floor((Date.now()-new Date(d))/60000); if(m<1)return"just now"; if(m<60)return`${m}m ago`; const h=Math.floor(m/60); if(h<24)return`${h}h ago`; return`${Math.floor(h/24)}d ago`; };
 const TITLES = { "/dashboard":"Dashboard", "/tasks":"Task Management", "/profile":"My Profile" };
 
@@ -76,7 +91,8 @@ export default function Layout({ children }) {
   const role   = fixRole(user?.role);
 
   useEffect(()=>{
-    if(!document.getElementById("layout-css")){const s=document.createElement("style");s.id="layout-css";s.textContent=CSS;document.head.appendChild(s);}
+    document.body.classList.remove('auth-page');
+    document.body.style.background = '#0c0f1a';
     loadNotifs();
     const iv=setInterval(loadNotifs,30000);
     return()=>clearInterval(iv);

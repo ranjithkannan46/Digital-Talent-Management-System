@@ -131,6 +131,21 @@ table.T-tbl tr:hover td{background:rgba(255,255,255,.015);}
 }
 `;
 
+// Inject styles immediately on module load (prevents flash on navigation)
+(() => {
+  if (typeof document !== 'undefined' && !document.getElementById('tasks-css')) {
+    const _s = document.createElement('style');
+    _s.id = 'tasks-css';
+    _s.textContent = CSS;
+    document.head.appendChild(_s);
+  }
+})();
+
+
+// Inject CSS immediately at module load
+(function(){
+    }());
+
 const SM = { todo:"To Do", in_progress:"In Progress", completed:"Completed" };
 const fmt = d => d ? new Date(d).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"2-digit"}) : "—";
 
@@ -203,8 +218,7 @@ export default function Tasks() {
   const isAdmin=fixRole(user?.role)==="admin";
 
   useEffect(()=>{
-    if(!document.getElementById("tasks-css")){const s=document.createElement("style");s.id="tasks-css";s.textContent=CSS;document.head.appendChild(s);}
-    load();
+load();
     if(location.state?.openCreate)setShowNew(true);
   },[]);
 
