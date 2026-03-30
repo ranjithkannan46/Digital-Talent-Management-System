@@ -24,9 +24,10 @@
 
       /* ── App shell: prevents sidebar layout flash ── */
       .app-shell {
-        display: flex;
-        min-height: 100vh;
-      }
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;   /* 🔥 ADD THIS */
+}
       .sidebar {
         width: 215px;
         flex-shrink: 0;
@@ -37,13 +38,14 @@
         z-index: 200;
       }
       .app-main {
-        flex: 1;
-        margin-left: 215px;
-        min-height: 100vh;
-        background: #0c0f1a;
-        display: flex;
-        flex-direction: column;
-      }
+  position: relative;
+  margin-left: 215px;   /* ✅ KEEP THIS */
+  width: calc(100% - 215px);  /* 🔥 ADD THIS */
+  min-height: 100vh;
+  background: #0c0f1a;
+  display: flex;
+  flex-direction: column;
+}
       .topbar {
         position: sticky;
         top: 0;
@@ -53,9 +55,11 @@
         z-index: 150;
       }
       .app-content {
-        flex: 1;
-        padding: 1.5rem 1.75rem;
-      }
+  flex: 1;
+  padding: 1.5rem 1.75rem;
+  width: 100%;        /* ✅ ADD */
+  max-width: 100%;    /* ✅ ADD */
+}
 
       /* ── Login page: green background ── */
       body.auth-page {
