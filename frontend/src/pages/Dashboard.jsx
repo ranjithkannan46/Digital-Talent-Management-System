@@ -122,12 +122,8 @@ Promise.all([axios.get("/auth/me"),axios.get("/tasks")])
 
         <div className="D-side">
           <div className="D-img-a">
-            <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800" alt="team"/>
             <div className="D-img-overlay"/>
-            <div className="D-img-text">
-              <div className="D-img-label">Rynixsoft · DTMS</div>
-              <div className="D-img-title">Built for high-performance teams</div>
-           </div>
+            <div className="D-img-text"><div className="D-img-label">Rynixsoft · DTMS</div><div className="D-img-title">Built for high-performance teams</div></div>
           </div>
 
           {isAdmin?(
@@ -147,16 +143,9 @@ Promise.all([axios.get("/auth/me"),axios.get("/tasks")])
             </div>
           ):(
             <div className="D-img-b">
-  <img 
-    src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=800"
-    alt="team"
-  />
-  <div className="D-img-overlay"/>
-  <div className="D-img-text">
-    <div className="D-img-label">Team collaboration</div>
-    <div className="D-img-title">Work smart, deliver fast</div>
-  </div>
-</div>
+              <div className="D-img-overlay"/>
+              <div className="D-img-text"><div className="D-img-label">Team collaboration</div><div className="D-img-title">Work smart, deliver fast</div></div>
+            </div>
           )}
         </div>
       </div>
