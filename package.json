@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "lucide-react": "^1.7.0",
+    "react-datepicker": "^9.1.0"
+  }
+}
