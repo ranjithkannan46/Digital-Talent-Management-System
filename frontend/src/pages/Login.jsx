@@ -17,17 +17,13 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-scene">
+    <div className="auth-scene auth-center">
       <div className="auth-glow auth-glow--cyan" />
       <div className="auth-glow auth-glow--violet" style={{ top: "70%", left: "60%" }} />
 
       <div className="auth-card">
         <div className="auth-card__header">
-          <span className="auth-card__badge">RETURNING PLAYER</span>
-          <h1 className="auth-card__title">Enter Game</h1>
-          <p className="auth-card__sub">Your stats are waiting. Resume the grind.</p>
         </div>
-
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
           {error && (
             <div className="auth-form__error" role="alert">
@@ -82,11 +78,10 @@ const Login = () => {
 
         <p className="auth-card__footer">
           New here?{" "}
-          <Link to="/register" className="auth-link">Create player account</Link>
+          <Link to="/register" className="auth-link">Create account</Link>
         </p>
       </div>
     </div>
   );
 };
-
 export default Login;

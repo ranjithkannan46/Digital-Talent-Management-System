@@ -1,4 +1,4 @@
-.dash { animation: pgIn .3s ease both; }
+.dash { animation: pgIn .3s ease both; padding-top: 180px;}
 @keyframes pgIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 
 .hero { position:relative; border-radius:14px; overflow:hidden; height:200px; margin-bottom:1.5rem; display:flex; align-items:flex-end; }

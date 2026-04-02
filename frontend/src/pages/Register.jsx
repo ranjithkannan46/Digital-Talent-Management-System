@@ -28,7 +28,7 @@ const Register = () => {
 
       <div className="auth-card">
         <div className="auth-card__header">
-          <span className="auth-card__badge">NEW PLAYER</span>
+          <span className="auth-card__badge">NEW USER</span>
           <h1 className="auth-card__title">Create Account</h1>
           <p className="auth-card__sub">Join the talent arena. Build your legacy.</p>
         </div>
@@ -41,7 +41,7 @@ const Register = () => {
           )}
 
           <div className="field-group">
-            <label htmlFor="name" className="field-label">Player Name</label>
+            <label htmlFor="name" className="field-label">User Name</label>
             <input
               id="name"
               name="name"
@@ -111,7 +111,7 @@ const Register = () => {
 
         <p className="auth-card__footer">
           Already registered?{" "}
-          <Link to="/login" className="auth-link">Enter the game</Link>
+          <Link to="/login" className="auth-link">Enter the Page</Link>
         </p>
       </div>
     </div>
