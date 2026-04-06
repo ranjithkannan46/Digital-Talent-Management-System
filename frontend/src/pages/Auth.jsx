@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { auth, provider, signInWithPopup } from "../firebase";
 import "../styles/auth.css";
-
+ 
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
     <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908C16.658 14.013 17.64 11.705 17.64 9.2z" fill="#4285F4"/>
@@ -12,24 +12,24 @@ const GoogleIcon = () => (
     <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
   </svg>
 );
-
+ 
 const EyeIcon = ({ open }) => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     {open ? <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8"/><circle cx="12" cy="12" r="3"/></> : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>}
   </svg>
 );
-
+ 
 const CheckIcon = () => (
   <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
     <polyline points="2,6 5,9 10,3"/>
   </svg>
 );
-
+ 
 const Particles = () => {
   const pts = [{left:"8%",delay:"0s",dur:"16s"},{left:"22%",delay:"2.5s",dur:"12s"},{left:"38%",delay:"5s",dur:"18s"},{left:"54%",delay:"1s",dur:"14s"},{left:"68%",delay:"7s",dur:"10s"},{left:"82%",delay:"3.5s",dur:"15s"},{left:"15%",delay:"9s",dur:"13s"},{left:"47%",delay:"6s",dur:"11s"},{left:"76%",delay:"4s",dur:"17s"}];
   return (<div className="particles">{pts.map((p,i) => <div key={i} className="particle" style={{left:p.left,bottom:"-6px",width:"2px",height:"2px",background:"rgba(74,222,128,.4)",animationDuration:p.dur,animationDelay:p.delay}}/>)}</div>);
 };
-
+ 
 const getStrength = pw => {
   if(!pw)return{label:"",level:""};
   let s=0;
@@ -41,11 +41,11 @@ const getStrength = pw => {
   if(s<=3)return{label:"Medium",level:"medium"};
   return{label:"Strong",level:"strong"};
 };
-
+ 
 const vName  = v => { if(!v.trim())return"Name is required."; if(/\d/.test(v))return"Name should not contain numbers."; if(!/^[a-zA-Z\s'-]+$/.test(v))return"Letters only."; if(v.trim().length<2)return"Min 2 characters."; return""; };
 const vEmail = v => { if(!v.trim())return"Email is required."; if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))return"Enter a valid email address."; return""; };
 const vPw    = v => { if(!v)return"Password is required."; if(v.length<8)return"Minimum 8 characters."; return""; };
-
+ 
 const OtpModal = ({ email, purpose, onClose, onSuccess }) => {
   const [digits,  setDigits]  = useState(["","","","","",""]);
   const [busy,    setBusy]    = useState(false);
@@ -53,14 +53,14 @@ const OtpModal = ({ email, purpose, onClose, onSuccess }) => {
   const [timer,   setTimer]   = useState(60);
   const [sending, setSending] = useState(false);
   const refs = useRef([]);
-
+ 
   useEffect(()=>{refs.current[0]?.focus();},[]);
   useEffect(()=>{
     if(timer<=0)return;
     const t=setInterval(()=>setTimer(p=>p-1),1000);
     return()=>clearInterval(t);
   },[timer]);
-
+ 
   const handleKey=(e,idx)=>{
     if(e.key==="Backspace"){const n=[...digits];if(n[idx]){n[idx]="";setDigits(n);}else if(idx>0){n[idx-1]="";setDigits(n);refs.current[idx-1]?.focus();}return;}
     if(e.key==="ArrowLeft"&&idx>0){refs.current[idx-1]?.focus();return;}
@@ -69,7 +69,7 @@ const OtpModal = ({ email, purpose, onClose, onSuccess }) => {
     const n=[...digits];n[idx]=e.key;setDigits(n);
     if(idx<5)refs.current[idx+1]?.focus();
   };
-
+ 
   const handlePaste=e=>{
     const p=e.clipboardData.getData("text").replace(/\D/g,"").slice(0,6);
     if(!p)return;
@@ -77,7 +77,7 @@ const OtpModal = ({ email, purpose, onClose, onSuccess }) => {
     refs.current[Math.min(p.length,5)]?.focus();
     e.preventDefault();
   };
-
+ 
   const verify=async e=>{
     e.preventDefault();
     const code=digits.join("");
@@ -87,14 +87,14 @@ const OtpModal = ({ email, purpose, onClose, onSuccess }) => {
     catch(ex){setErr(ex.response?.data?.message||"Incorrect code. Try again.");setDigits(["","","","","",""]);refs.current[0]?.focus();}
     finally{setBusy(false);}
   };
-
+ 
   const resend=async()=>{
     setSending(true);
     try{await axios.post("/api/auth/send-otp",{email,purpose});setDigits(["","","","","",""]);setErr("");setTimer(60);refs.current[0]?.focus();}
     catch{setErr("Failed to resend.");}
     finally{setSending(false);}
   };
-
+ 
   return(
     <div className="otp-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="otp-modal">
@@ -124,7 +124,7 @@ const OtpModal = ({ email, purpose, onClose, onSuccess }) => {
     </div>
   );
 };
-
+ 
 const TermsModal = ({ onClose }) => {
   const sections = [
     { icon:"📋", title:"Acceptance",       text:"By creating an account on the Digital Talent Management System, you agree to be bound by these Terms. If you do not agree, please do not use this platform." },
@@ -176,7 +176,7 @@ const TermsModal = ({ onClose }) => {
     </div>
   );
 };
-
+ 
 const LeftCards = () => (
   <div className="left-cards">
     <div className="glass-card gc-1"><p className="gc-label">Active Tasks</p><p className="gc-value">248 <span>this week</span></p></div>
@@ -191,13 +191,13 @@ const LeftCards = () => (
     <div className="glass-card gc-3"><p className="gc-label">Completion</p><p className="gc-value">92% <span>on track</span></p></div>
   </div>
 );
-
+ 
 // Ensure login page always has its own background
 if (typeof document !== 'undefined') {
   document.body.classList.add('auth-page');
   document.body.style.background = '';
 }
-
+ 
 export default function Auth() {
   const navigate = useNavigate();
   const [screen,      setScreen]      = useState("signin");
@@ -213,18 +213,18 @@ export default function Auth() {
   const[firstName,setFirstName]=useState("");const[lastName,setLastName]=useState("");const[suEmail,setSuEmail]=useState("");const[suPass,setSuPass]=useState("");const[suConfirm,setSuConfirm]=useState("");const[agreed,setAgreed]=useState(false);const[showSuPw,setShowSuPw]=useState(false);const[showConPw,setShowConPw]=useState(false);const[suT,setSuT]=useState({});
   const[fpEmail,setFpEmail]=useState("");const[fpT,setFpT]=useState(false);
   const[newPass,setNewPass]=useState("");const[newConf,setNewConf]=useState("");const[showNpw,setShowNpw]=useState(false);const[showCpw,setShowCpw]=useState(false);const[npT,setNpT]=useState({});
-
+ 
     // Manage body class for login page background
   useEffect(() => {
     document.body.classList.add('auth-page');
     return () => document.body.classList.remove('auth-page');
   }, []);
-
+ 
   useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(""),3200);return()=>clearTimeout(t);},[toast]);
-
+ 
   const clear=()=>setErr("");
   const go=s=>{setScreen(s);clear();};
-
+ 
   const signIn=async e=>{
     e.preventDefault();setSiT({email:true,pass:true});
     const eE=vEmail(siEmail);const pE=vPw(siPass);
@@ -237,7 +237,7 @@ export default function Auth() {
     }catch(ex){setErr(ex.response?.data?.message||"Incorrect email or password.");}
     finally{setBusy(false);}
   };
-
+ 
   const handleSignUp=e=>{
     e.preventDefault();setSuT({first:true,email:true,pass:true});
     const nE=vName(firstName);const eE=vEmail(suEmail);const pE=vPw(suPass);
@@ -253,7 +253,7 @@ export default function Auth() {
       if(ex.response?.status===409){setShowOtp(false);setErr("__duplicate__");}
     });
   };
-
+ 
   const handleRegOtp=async()=>{
     setShowOtp(false);setBusy(true);
     try{
@@ -263,7 +263,7 @@ export default function Auth() {
     }catch(ex){setErr(ex.response?.data?.message||"Could not create account.");}
     finally{setBusy(false);}
   };
-
+ 
   const handleForgotSend=e=>{
     e.preventDefault();setFpT(true);
     const eE=vEmail(fpEmail);if(eE){setErr(eE);return;}
@@ -272,7 +272,7 @@ export default function Auth() {
     setOtpPurpose("reset");setShowOtp(true);
     axios.post("/api/auth/send-otp",{email:fpEmail.trim(),purpose:"reset"}).catch(()=>{});
   };
-
+ 
   const handleResetPw=async e=>{
     e.preventDefault();setNpT({pass:true});
     const pE=vPw(newPass);if(pE){setErr(pE);return;}
@@ -285,7 +285,7 @@ export default function Auth() {
     }catch(ex){setErr(ex.response?.data?.message||"Reset failed.");}
     finally{setBusy(false);}
   };
-
+ 
   const googleAuth=async()=>{
     clear();setGBusy(true);
     try{
@@ -299,7 +299,7 @@ export default function Auth() {
       setErr(ex.response?.data?.message||ex.message||"Google sign-in failed.");
     }finally{setGBusy(false);}
   };
-
+ 
   const fnE=suT.first?vName(firstName):"";const seE=suT.email?vEmail(suEmail):"";const spE=suT.pass?vPw(suPass):"";
   const fpeE=fpT?vEmail(fpEmail):"";const npE=npT.pass?vPw(newPass):"";
   const pwM=suConfirm.length>0&&suPass===suConfirm;const pwNM=suConfirm.length>0&&suPass!==suConfirm;
@@ -309,7 +309,7 @@ export default function Auth() {
   const canUp=firstName.trim()&&!vName(firstName)&&suEmail&&!vEmail(suEmail)&&suPass.length>=8&&suPass===suConfirm&&agreed&&!busy;
   const canFp=fpEmail&&!vEmail(fpEmail)&&!busy;
   const canReset=newPass.length>=8&&newPass===newConf&&!busy;
-
+ 
   return(
     <>
       {toast&&<div className="toast"><div className="toast-icon">✓</div>{toast}</div>}
@@ -319,7 +319,40 @@ export default function Auth() {
           onClose={()=>setShowOtp(false)}
           onSuccess={otpPurpose==="reset"?()=>{setShowOtp(false);setScreen("forgot-reset");clear();}:handleRegOtp}/>
       )}
-
+ 
+      {/* Animated background */}
+      <div className="auth-bg">
+        {/* Orbs */}
+        {[
+          {w:320,h:320,top:'10%',left:'5%',dur:'8s',delay:'0s'},
+          {w:200,h:200,top:'60%',left:'20%',dur:'11s',delay:'2s'},
+          {w:260,h:260,top:'30%',right:'8%',dur:'9s',delay:'4s'},
+          {w:180,h:180,top:'75%',right:'15%',dur:'13s',delay:'1s'},
+          {w:400,h:400,top:'5%',right:'25%',dur:'15s',delay:'6s'},
+        ].map((o,i)=>(
+          <div key={i} className="auth-orb" style={{width:o.w,height:o.h,top:o.top,left:o.left||'auto',right:o.right||'auto',animationDuration:o.dur,animationDelay:o.delay}}/>
+        ))}
+        {/* Rings */}
+        {[
+          {w:500,h:500,top:'-100px',left:'-100px',dur:'20s',delay:'0s'},
+          {w:350,h:350,bottom:'-80px',right:'-80px',dur:'16s',delay:'3s'},
+          {w:200,h:200,top:'40%',left:'30%',dur:'12s',delay:'5s'},
+        ].map((r,i)=>(
+          <div key={i} className="auth-ring" style={{width:r.w,height:r.h,top:r.top||'auto',left:r.left||'auto',bottom:r.bottom||'auto',right:r.right||'auto',animationDuration:r.dur,animationDelay:r.delay}}/>
+        ))}
+        {/* Particles */}
+        {[
+          {left:'8%',dur:'16s',delay:'0s',size:3},
+          {left:'22%',dur:'12s',delay:'3s',size:2},
+          {left:'40%',dur:'18s',delay:'6s',size:3},
+          {left:'60%',dur:'14s',delay:'1s',size:2},
+          {left:'75%',dur:'10s',delay:'8s',size:3},
+          {left:'90%',dur:'15s',delay:'4s',size:2},
+        ].map((p,i)=>(
+          <div key={i} className="auth-particle" style={{left:p.left,bottom:'-6px',width:p.size,height:p.size,animationDuration:p.dur,animationDelay:p.delay}}/>
+        ))}
+      </div>
+ 
       <div className="wrap">
         <div className="left">
           <div className="left-bg"/><div className="left-grid"/>
@@ -336,9 +369,9 @@ export default function Auth() {
             <h1 className="left-title">Every task.<br/>Every person.<br/><em>One place.</em></h1>
           </div>
         </div>
-
+ 
         <div className="right">
-
+ 
           {screen==="signin"&&(
             <div className="in">
               <div style={{marginBottom:"1.5rem",paddingTop:".25rem"}}>
@@ -368,7 +401,7 @@ export default function Auth() {
               </form>
             </div>
           )}
-
+ 
           {screen==="signup"&&(
             <div className="in">
               <p className="r-title">Create account</p>
@@ -419,7 +452,7 @@ export default function Auth() {
               </form>
             </div>
           )}
-
+ 
           {screen==="forgot-email"&&(
             <div className="in">
               <p className="fp-title">Forgot Password?</p>
@@ -436,7 +469,7 @@ export default function Auth() {
               <button className="back-btn" onClick={()=>go("signin")}>← Back to sign in</button>
             </div>
           )}
-
+ 
           {screen==="forgot-reset"&&(
             <div className="in">
               <p className="fp-title">Set New Password</p>
@@ -466,7 +499,7 @@ export default function Auth() {
               <button className="back-btn" onClick={()=>go("signin")}>← Back to sign in</button>
             </div>
           )}
-
+ 
         </div>
       </div>
     </>

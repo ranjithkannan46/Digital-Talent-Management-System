@@ -106,3 +106,14 @@
 @media (max-width:900px) {
   .p-layout { grid-template-columns:1fr; }
 }
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px rgba(255,255,255,0.05) inset !important;
+  -webkit-text-fill-color: #f0fff4 !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+.input {
+  background: rgba(255,255,255,.05) !important;
+  color: #f0fff4;
+}

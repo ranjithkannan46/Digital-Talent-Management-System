@@ -211,14 +211,11 @@ export default function Profile() {
                   <div className="pf-group">
                     <label className="pf-label">Email Address</label>
                     <input
-                      className="pf-input"
-                      type="email"
-                      placeholder="your@email.com"
-                      value={pForm.email}
-                      onChange={e => setPForm(p => ({ ...p, email: e.target.value }))}
-                      disabled={pBusy}
-                      autoComplete="email"
-                    />
+                    className="pf-input"
+                    type="email"
+                    value={pForm.email}
+                    readOnly   /* ✅ instead of editable */
+                    disabled/>
                   </div>
                 </div>
                 <div className="pf-foot">
