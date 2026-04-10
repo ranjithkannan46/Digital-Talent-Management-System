@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../api/axios";
 import { auth, provider, signInWithPopup } from "../firebase";
-import "../styles/auth.css";
+import "../styles/Auth.css";
+import "../styles/admin_approval.css";
  
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -83,14 +84,14 @@ const OtpModal = ({ email, purpose, onClose, onSuccess }) => {
     const code=digits.join("");
     if(code.length<6){setErr("Enter the complete 6-digit code.");return;}
     setErr("");setBusy(true);
-    try{await axios.post("/api/auth/verify-otp",{email,code});onSuccess();}
+    try{await axios.post("/auth/verify-otp",{email,code});onSuccess();}
     catch(ex){setErr(ex.response?.data?.message||"Incorrect code. Try again.");setDigits(["","","","","",""]);refs.current[0]?.focus();}
     finally{setBusy(false);}
   };
  
   const resend=async()=>{
     setSending(true);
-    try{await axios.post("/api/auth/send-otp",{email,purpose});setDigits(["","","","","",""]);setErr("");setTimer(60);refs.current[0]?.focus();}
+    try{await axios.post("/auth/send-otp",{email,purpose});setDigits(["","","","","",""]);setErr("");setTimer(60);refs.current[0]?.focus();}
     catch{setErr("Failed to resend.");}
     finally{setSending(false);}
   };
@@ -201,6 +202,7 @@ if (typeof document !== 'undefined') {
 export default function Auth() {
   const navigate = useNavigate();
   const [screen,      setScreen]      = useState("signin");
+  const [loginType,   setLoginType]   = useState("user"); // "user" or "admin"
   const [busy,        setBusy]        = useState(false);
   const [gBusy,       setGBusy]       = useState(false);
   const [err,         setErr]         = useState("");
@@ -209,10 +211,14 @@ export default function Auth() {
   const [showOtp,     setShowOtp]     = useState(false);
   const [otpPurpose,  setOtpPurpose]  = useState("register");
   const [pendingData, setPendingData] = useState(null);
+  const [isPending,   setIsPending]   = useState(false);
+  const [pendingUser, setPendingUser] = useState(null);
+
   const [siEmail,setSiEmail]=useState("");const[siPass,setSiPass]=useState("");const[showSiPw,setShowSiPw]=useState(false);const[siT,setSiT]=useState({});
   const[firstName,setFirstName]=useState("");const[lastName,setLastName]=useState("");const[suEmail,setSuEmail]=useState("");const[suPass,setSuPass]=useState("");const[suConfirm,setSuConfirm]=useState("");const[agreed,setAgreed]=useState(false);const[showSuPw,setShowSuPw]=useState(false);const[showConPw,setShowConPw]=useState(false);const[suT,setSuT]=useState({});
   const[fpEmail,setFpEmail]=useState("");const[fpT,setFpT]=useState(false);
   const[newPass,setNewPass]=useState("");const[newConf,setNewConf]=useState("");const[showNpw,setShowNpw]=useState(false);const[showCpw,setShowCpw]=useState(false);const[npT,setNpT]=useState({});
+
  
     // Manage body class for login page background
   useEffect(() => {
@@ -231,10 +237,21 @@ export default function Auth() {
     if(eE){setErr(eE);return;}if(pE){setErr(pE);return;}
     clear();setBusy(true);
     try{
-      const{data}=await axios.post("/api/auth/login",{email:siEmail.trim(),password:siPass});
-      localStorage.setItem("dtms_token",data.token);localStorage.setItem("dtms_user",JSON.stringify(data.user));
-      setToast("Login successful! Redirecting...");setTimeout(()=>{window.location.replace("/dashboard");},900);
-    }catch(ex){setErr(ex.response?.data?.message||"Incorrect email or password.");}
+      const{data}=await axios.post("/auth/login",{email:siEmail.trim(),password:siPass});
+      
+      // If we got here, user is approved or admin
+      localStorage.setItem("dtms_token",data.token);
+      localStorage.setItem("dtms_user",JSON.stringify(data.user));
+      setToast("Login successful! Redirecting...");
+      setTimeout(()=>{window.location.replace("/dashboard");},900);
+    }catch(ex){
+      if (ex.response?.status === 403 && ex.response?.data?.status === "pending") {
+        setPendingUser(siEmail);
+        setIsPending(true);
+      } else {
+        setErr(ex.response?.data?.message||"Incorrect email or password.");
+      }
+    }
     finally{setBusy(false);}
   };
  
@@ -248,18 +265,27 @@ export default function Auth() {
     const name=`${firstName.trim()} ${lastName.trim()}`.trim();
     const email=suEmail.trim();
     setPendingData({name,email,password:suPass});
-    setOtpPurpose("register");setShowOtp(true);
-    axios.post("/api/auth/send-otp",{email,purpose:"register"}).catch(ex=>{
-      if(ex.response?.status===409){setShowOtp(false);setErr("__duplicate__");}
-    });
+    setOtpPurpose("register");setBusy(true);
+    axios.post("/auth/send-otp",{email,purpose:"register"})
+      .then(() => { setShowOtp(true); })
+      .catch(ex=>{
+        if(ex.response?.status===409){setErr("__duplicate__");}
+        else {
+          const msg = ex.response?.data?.error || ex.response?.data?.message || "Failed to send OTP. Please try again.";
+          setErr(msg);
+        }
+      })
+      .finally(() => setBusy(false));
   };
  
   const handleRegOtp=async()=>{
     setShowOtp(false);setBusy(true);
     try{
-      const{data}=await axios.post("/api/auth/register",pendingData);
-      localStorage.setItem("dtms_token",data.token);localStorage.setItem("dtms_user",JSON.stringify(data.user));
-      setToast("Account created! Welcome to DTMS.");setTimeout(()=>{window.location.replace("/dashboard");},1000);
+      const{data}=await axios.post("/auth/register",pendingData);
+      // Instead of logging in directly, show the waiting room
+      setPendingUser(data.user.email);
+      setIsPending(true);
+      setToast("Account created! Waiting for approval.");
     }catch(ex){setErr(ex.response?.data?.message||"Could not create account.");}
     finally{setBusy(false);}
   };
@@ -269,8 +295,11 @@ export default function Auth() {
     const eE=vEmail(fpEmail);if(eE){setErr(eE);return;}
     clear();
     setPendingData({email:fpEmail.trim()});
-    setOtpPurpose("reset");setShowOtp(true);
-    axios.post("/api/auth/send-otp",{email:fpEmail.trim(),purpose:"reset"}).catch(()=>{});
+    setOtpPurpose("reset");setBusy(true);
+    axios.post("/auth/send-otp",{email:fpEmail.trim(),purpose:"reset"})
+      .then(() => { setShowOtp(true); })
+      .catch(ex => { setErr(ex.response?.data?.message || "Failed to send verification code."); })
+      .finally(() => setBusy(false));
   };
  
   const handleResetPw=async e=>{
@@ -279,7 +308,7 @@ export default function Auth() {
     if(newPass!==newConf){setErr("Passwords do not match.");return;}
     clear();setBusy(true);
     try{
-      await axios.post("/api/auth/reset-password",{email:pendingData.email,newPassword:newPass});
+      await axios.post("/auth/reset-password",{email:pendingData.email,newPassword:newPass});
       setToast("Password reset successfully!");
       setTimeout(()=>{go("signin");setNewPass("");setNewConf("");setFpEmail("");},1500);
     }catch(ex){setErr(ex.response?.data?.message||"Reset failed.");}
@@ -291,7 +320,7 @@ export default function Auth() {
     try{
       const result=await signInWithPopup(auth,provider);
       const{displayName,email,uid}=result.user;
-      const{data}=await axios.post("/api/auth/google",{name:displayName||email.split("@")[0],email,uid});
+      const{data}=await axios.post("/auth/google",{name:displayName||email.split("@")[0],email,uid});
       localStorage.setItem("dtms_token",data.token);localStorage.setItem("dtms_user",JSON.stringify(data.user));
       setToast("Signed in with Google!");setTimeout(()=>{window.location.replace("/dashboard");},900);
     }catch(ex){
@@ -310,7 +339,49 @@ export default function Auth() {
   const canFp=fpEmail&&!vEmail(fpEmail)&&!busy;
   const canReset=newPass.length>=8&&newPass===newConf&&!busy;
  
+  if (isPending) {
+    return (
+      <div className="waiting-wrap">
+        <div className="waiting-card">
+          <div className="waiting-icon">⏳</div>
+          <h2 className="waiting-title">Account Pending Approval</h2>
+          <p className="waiting-sub">Hello <strong>{pendingUser}</strong>,<br/>Your account has been created successfully and is currently being reviewed by our administrative team.</p>
+          
+          <div className="waiting-info">
+            <div className="wi-row">
+              <span className="wi-ico">🏢</span>
+              <div>
+                <div className="wi-label">About Rynixsoft</div>
+                <p className="wi-text">We are a leading digital solutions provider focused on elevating talent through technology. DTMS is our core platform for workforce excellence.</p>
+              </div>
+            </div>
+            <div className="wi-row">
+              <span className="wi-ico">🛡️</span>
+              <div>
+                <div className="wi-label">Security Protocol</div>
+                <p className="wi-text">To maintain platform integrity, all new accounts require manual manual verification by an authorized administrator.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="waiting-status">
+            <div className="ws-track">
+              <div className="ws-step on"><span>✓</span><label>Registered</label></div>
+              <div className="ws-line active"/>
+              <div className="ws-step active"><span className="ws-spin"/> <label>Approval</label></div>
+              <div className="ws-line"/>
+              <div className="ws-step"><span>3</span><label>Active</label></div>
+            </div>
+          </div>
+
+          <button className="btn-ghost" style={{marginTop:"1rem"}} onClick={()=>setIsPending(false)}>Back to Sign In</button>
+        </div>
+      </div>
+    );
+  }
+
   return(
+
     <>
       {toast&&<div className="toast"><div className="toast-icon">✓</div>{toast}</div>}
       {showTerms&&<TermsModal onClose={()=>setShowTerms(false)}/>}
@@ -376,10 +447,15 @@ export default function Auth() {
             <div className="in">
               <div style={{marginBottom:"1.5rem",paddingTop:".25rem"}}>
                 <h2 style={{fontFamily:"'Inter',sans-serif",fontSize:"2rem",fontWeight:800,color:"#ffffff",letterSpacing:"-.03em",lineHeight:1.1,marginBottom:".85rem"}}>Digital Talent<br/>Management System</h2>
+                <div className="login-toggle-wrap">
+                  <button type="button" className={`lt-btn ${loginType==='user'?'on':''}`} onClick={()=>setLoginType('user')}>Staff Login</button>
+                  <button type="button" className={`lt-btn ${loginType==='admin'?'on':''}`} onClick={()=>setLoginType('admin')}>Admin Login</button>
+                </div>
                 <div style={{height:"1px",background:"rgba(255,255,255,0.15)",width:"100%"}}/>
               </div>
-              <p className="r-title">Welcome back</p>
-              <p className="r-sub">No account? <button onClick={()=>go("signup")}>Create a new account</button></p>
+              <p className="r-title">{loginType==='admin' ? 'Administrator Login' : 'Welcome back'}</p>
+              <p className="r-sub">{loginType==='admin' ? 'Authorized personnel only. Please sign in.' : <>No account? <button onClick={()=>go("signup")}>Create a new account</button></>}</p>
+
               {err&&<div className="alert alert-err">{err}</div>}
               <form className="fields" onSubmit={signIn} noValidate>
                 <div>

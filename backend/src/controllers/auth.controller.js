@@ -2,6 +2,8 @@ const bcrypt = require("bcryptjs");
 const { PrismaClient } = require("@prisma/client");
 const { validationResult } = require("express-validator");
 const { signToken } = require("../utils/jwt");
+const { consumeVerification } = require("./otp.controller");
+const { sendAdminApprovalNotification, sendUserApprovedEmail } = require("../utils/mailers");
 
 const prisma = new PrismaClient();
 const sanitizeUser = ({ password, ...safe }) => safe;
@@ -13,10 +15,20 @@ const register = async (req, res) => {
   try {
     const existing = await prisma.user.findUnique({ where:{email} });
     if (existing) return res.status(409).json({ message:"An account with this email already exists." });
+    
+    // VERIFY OTP state
+    if (!consumeVerification(email, "register")) {
+      return res.status(403).json({ message: "Email not verified. Please complete OTP verification first." });
+    }
+
     const hashed = await bcrypt.hash(password, 12);
-    const user   = await prisma.user.create({ data:{ name, email, password:hashed } });
+    const user   = await prisma.user.create({ data:{ name, email, password:hashed, status: "pending" } });
+    
+    // Notify Admin
+    try { await sendAdminApprovalNotification(user); } catch(e) { console.error("Admin Email failed", e); }
+
     const token  = signToken({ id:user.id, email:user.email });
-    res.status(201).json({ message:"Account created.", token, user:sanitizeUser(user) });
+    res.status(201).json({ message:"Account created. Waiting for admin approval.", token, user:sanitizeUser(user) });
   } catch(err) { console.error("[register]",err); res.status(500).json({ message:"Something went wrong." }); }
 };
 
@@ -27,6 +39,14 @@ const login = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({ where:{email} });
     if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ message:"Invalid credentials." });
+    
+    if (user.status !== "approved" && user.role !== "admin") {
+      return res.status(403).json({ 
+        message: "Your account is pending approval.", 
+        status: user.status 
+      });
+    }
+
     const token = signToken({ id:user.id, email:user.email });
     res.json({ message:"Login successful.", token, user:sanitizeUser(user) });
   } catch(err) { console.error("[login]",err); res.status(500).json({ message:"Something went wrong." }); }
@@ -41,6 +61,12 @@ const resetPassword = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({ where:{email} });
     if (!user) return res.status(404).json({ message:"No account found with this email." });
+
+    // VERIFY OTP state
+    if (!consumeVerification(email, "reset")) {
+      return res.status(403).json({ message: "Verification required. Please complete OTP verification first." });
+    }
+
     const hashed = await bcrypt.hash(newPassword, 12);
     await prisma.user.update({ where:{email}, data:{ password:hashed } });
     res.json({ message:"Password reset successfully." });
@@ -77,4 +103,31 @@ const changePassword = async (req, res) => {
   } catch(err) { console.error("[changePassword]",err); res.status(500).json({ message:"Something went wrong." }); }
 };
 
-module.exports = { register, login, getMe, resetPassword, updateProfile, changePassword };
+const getPendingUsers = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") return res.status(403).json({ message: "Admin only." });
+    const users = await prisma.user.findMany({
+      where: { status: "pending" },
+      select: { id: true, name: true, email: true, createdAt: true }
+    });
+    res.json({ users });
+  } catch (err) { res.status(500).json({ message: "Error fetching users." }); }
+};
+
+const approveUser = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") return res.status(403).json({ message: "Admin only." });
+    const { id } = req.params;
+    const user = await prisma.user.update({
+      where: { id },
+      data: { status: "approved" }
+    });
+    
+    // Notify User
+    try { await sendUserApprovedEmail(user.email, user.name); } catch(e) {}
+    
+    res.json({ message: "User approved successfully.", user: sanitizeUser(user) });
+  } catch (err) { res.status(500).json({ message: "Error approving user." }); }
+};
+
+module.exports = { register, login, getMe, resetPassword, updateProfile, changePassword, getPendingUsers, approveUser };

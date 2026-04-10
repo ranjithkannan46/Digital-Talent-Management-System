@@ -1,6 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
+const { PrismaClient } =require("@prisma/client");
 const { validationResult } = require("express-validator");
 const { createNotification } = require("./notification.controller");
+const { sendTaskEmail } = require("../utils/mailers");
 
 const prisma = new PrismaClient();
 
@@ -19,8 +20,13 @@ const include = {
 
 const getTasks = async (req, res) => {
   try {
-    const where = req.user.role === "admin" ? {} : { assignedToId: req.user.id };
+    const isAdmin = req.user.role?.toLowerCase() === "admin";
+    const where = isAdmin ? {} : { assignedToId: req.user.id };
+    console.log(`[getTasks] User ID: ${req.user.id}, Role: ${req.user.role}, Query:`, JSON.stringify(where));
+    
     const tasks = await prisma.task.findMany({ where, include, orderBy: { createdAt: "desc" } });
+    console.log(`[getTasks] Found ${tasks.length} tasks for user ${req.user.id}`);
+    
     res.json({ tasks: tasks.map(safeTask) });
   } catch (err) { console.error("[getTasks]",err); res.status(500).json({ message:"Something went wrong." }); }
 };
@@ -29,7 +35,9 @@ const getTask = async (req, res) => {
   try {
     const task = await prisma.task.findUnique({ where:{ id:req.params.id }, include });
     if (!task) return res.status(404).json({ message:"Task not found." });
-    if (req.user.role !== "admin" && task.assignedToId !== req.user.id) return res.status(403).json({ message:"Access denied." });
+    
+    const isAdmin = req.user.role?.toLowerCase() === "admin";
+    if (!isAdmin && task.assignedToId !== req.user.id) return res.status(403).json({ message:"Access denied." });
     res.json({ task: safeTask(task) });
   } catch (err) { console.error("[getTask]",err); res.status(500).json({ message:"Something went wrong." }); }
 };
@@ -40,8 +48,9 @@ const createTask = async (req, res) => {
 
   const { title, description, priority, dueDate, assignedToId } = req.body;
   try {
+    let assignee = null;
     if (assignedToId) {
-      const assignee = await prisma.user.findUnique({ where:{ id:assignedToId } });
+      assignee = await prisma.user.findUnique({ where:{ id:assignedToId } });
       if (!assignee) return res.status(404).json({ message:"Assigned user not found." });
     }
 
@@ -57,13 +66,20 @@ const createTask = async (req, res) => {
     });
 
     // Notify assignee
-    if (assignedToId) {
+    if (assignedToId && assignee) {
       await createNotification(
         assignedToId,
         "New Task Assigned",
         `You have been assigned a new task: "${title}" by ${req.user.name}`,
         "task_assigned"
       );
+      
+      // Professional Email Notification
+      try {
+        await sendTaskEmail(assignee.email, assignee.name, title, priority || "medium");
+      } catch (mailErr) {
+        console.error("[createTask] Email fail:", mailErr.message);
+      }
     }
 
     res.status(201).json({ message:"Task created.", task: safeTask(task) });
@@ -82,7 +98,9 @@ const updateTask = async (req, res) => {
     let notifyAdminId = existing.createdById;
     let notifyAssigneeId = null;
 
-    if (req.user.role === "admin") {
+    const isAdmin = req.user.role?.toLowerCase() === "admin";
+
+    if (isAdmin) {
       const { title, description, priority, status, dueDate, assignedToId } = req.body;
       if (title)                    data.title       = title;
       if (description !== undefined) data.description = description;
@@ -126,6 +144,16 @@ const updateTask = async (req, res) => {
         `You have been assigned: "${existing.title}"`,
         "task_assigned"
       );
+
+      // Email notification for reassignment
+      try {
+        const newAssignee = await prisma.user.findUnique({ where: { id: notifyAssigneeId } });
+        if (newAssignee) {
+          await sendTaskEmail(newAssignee.email, newAssignee.name, existing.title, existing.priority);
+        }
+      } catch (mailErr) {
+        console.error("[updateTask] Email fail:", mailErr.message);
+      }
     }
 
     const task = await prisma.task.update({ where:{ id:req.params.id }, data, include });
@@ -144,8 +172,9 @@ const deleteTask = async (req, res) => {
 
 const getUsers = async (req, res) => {
   try {
+    // Include all non-admin users as assignees (case insensitive)
     const users = await prisma.user.findMany({
-      where:   { role: "user" },
+      where:   { NOT: { role: { equals: "admin", mode: "insensitive" } } },
       select:  { id:true, name:true, email:true, role:true },
       orderBy: { name:"asc" },
     });

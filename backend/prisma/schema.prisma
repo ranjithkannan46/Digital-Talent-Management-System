@@ -13,11 +13,13 @@ model User {
   email     String   @unique
   password  String
   role      String   @default("user")
+  status    String   @default("pending") // pending, approved, rejected
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   createdTasks  Task[] @relation("CreatedBy")
   assignedTasks Task[] @relation("AssignedTo")
+  notifications Notification[]
 
   @@map("users")
 }
@@ -41,3 +43,16 @@ model Task {
 
   @@map("tasks")
 }
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   @default("info")
+  read      Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
