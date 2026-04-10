@@ -1,15 +1,13 @@
-const sendEmail = require("../utils/mailer");
+const { sendVerificationEmail } = require("../utils/mailers");
 
-/*
-  In-memory OTP store — maps email → { code, expiresAt, purpose }
-*/
 const otpStore = new Map();
-const OTP_TTL = 10 * 60 * 1000; // 10 minutes
+const verifiedEmails = new Map(); // Track emails that successfully completed OTP
+const OTP_TTL = 10 * 60 * 1000;
+const VERIFIED_TTL = 10 * 60 * 1000; // Success state lasts 10 mins
 
 const generateCode = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
-/* POST /api/auth/send-otp */
 const sendOtp = async (req, res) => {
   const { email, purpose = "register" } = req.body;
 
@@ -26,87 +24,70 @@ const sendOtp = async (req, res) => {
   });
 
   try {
-    await sendEmail(
-      email,
-      purpose === "reset"
-        ? "Reset your DTMS password"
-        : "Your DTMS Verification Code",
-      `
-      <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:480px;margin:auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
-        
-        <div style="background:#4f46e5;padding:20px;color:#fff;">
-          <h2 style="margin:0;">DTMS Verification</h2>
-        </div>
-
-        <div style="padding:24px;text-align:center;">
-          <p style="font-size:14px;color:#6b7280;">
-            Your OTP code (valid for 10 minutes)
-          </p>
-
-          <div style="font-size:36px;font-weight:bold;letter-spacing:8px;color:#4f46e5;margin:20px 0;">
-            ${code}
-          </div>
-
-          <p style="font-size:12px;color:#9ca3af;">
-            Do not share this code with anyone.
-          </p>
-        </div>
-
-      </div>
-      `
-    );
-
+    await sendVerificationEmail(email, code, purpose);
     console.log(`OTP ${code} sent to ${email}`);
 
     res.json({ message: "OTP sent successfully" });
-
   } catch (err) {
-    console.error("OTP ERROR:", err.message);
-
+    console.error(`[otp] ❌ ${err.message}`);
     otpStore.delete(email.toLowerCase());
 
-    res.status(500).json({
-      message: "Failed to send OTP. Check email configuration.",
+    res.status(500).json({ 
+      message: "Failed to send OTP", 
+      error: err.message 
     });
   }
 };
 
-/* POST /api/auth/verify-otp */
 const verifyOtp = (req, res) => {
   const { email, code } = req.body;
-
-  if (!email || !code) {
-    return res.status(400).json({ message: "Email and code are required." });
-  }
-
   const key = email.toLowerCase();
   const stored = otpStore.get(key);
 
   if (!stored) {
-    return res.status(400).json({
-      message: "No OTP found. Please request again.",
-    });
+    return res.status(400).json({ message: "No OTP found" });
   }
 
   if (Date.now() > stored.expiresAt) {
     otpStore.delete(key);
-    return res.status(400).json({
-      message: "OTP expired. Request a new one.",
-    });
+    return res.status(400).json({ message: "OTP expired" });
   }
 
-  if (stored.code !== code.trim()) {
-    return res.status(400).json({
-      message: "Incorrect OTP.",
-    });
+  if (stored.code !== code) {
+    return res.status(400).json({ message: "Invalid OTP" });
   }
+
+  // Success! Record verification status
+  verifiedEmails.set(key, {
+    verified: true,
+    expiresAt: Date.now() + VERIFIED_TTL,
+    purpose: stored.purpose
+  });
 
   otpStore.delete(key);
-
-  res.json({
-    message: "OTP verified successfully",
-    purpose: stored.purpose,
-  });
+  res.json({ message: "OTP verified" });
 };
 
-module.exports = { sendOtp, verifyOtp };
+/**
+ * Middleware-like helper to check if email was verified via OTP
+ */
+const checkVerification = (email, purpose) => {
+  const entry = verifiedEmails.get(email.toLowerCase());
+  if (!entry) return false;
+  if (Date.now() > entry.expiresAt) {
+    verifiedEmails.delete(email.toLowerCase());
+    return false;
+  }
+  return entry.verified && entry.purpose === purpose;
+};
+
+/**
+ * Consume the verification status (delete after check to prevent reuse)
+ */
+const consumeVerification = (email, purpose) => {
+  const isValid = checkVerification(email, purpose);
+  if (isValid) verifiedEmails.delete(email.toLowerCase());
+  return isValid;
+};
+
+module.exports = { sendOtp, verifyOtp, checkVerification, consumeVerification };

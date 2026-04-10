@@ -2,7 +2,11 @@ import { useState, useRef, useEffect } from "react";
 import axios from "../api/axios";
 import "../styles/profile.css";
 
-const fixRole = r => (!r || r === "player" || r === "Player") ? "user" : r;
+const displayRole = (r) => {
+  const role = r?.toLowerCase();
+  if (role === "admin") return "Administrator";
+  return "Talent / User";
+};
 
 const EyeIcon = ({ open }) => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -26,7 +30,7 @@ export default function Profile() {
   const [photo, setPhoto]   = useState(localStorage.getItem("dtms_photo") || "");
   const [tasks, setTasks]   = useState([]);
 
-  const role    = fixRole(stored?.role);
+  const role    = displayRole(stored?.role);
   const initial = stored?.name?.charAt(0)?.toUpperCase() || "U";
   const joined  = stored?.createdAt
     ? new Date(stored.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
@@ -146,7 +150,7 @@ export default function Profile() {
             <div className="p-info-row"><span className="p-info-key">Employee ID</span><span className="p-info-val">{empId}</span></div>
             <div className="p-info-row">
               <span className="p-info-key">Role</span>
-              <span className={`p-info-role p-info-role-${role}`}>{role}</span>
+              <span className={`p-info-role ${stored?.role?.toLowerCase() === 'admin' ? 'p-info-role-admin' : 'p-info-role-user'}`}>{role}</span>
             </div>
             <div className="p-info-row"><span className="p-info-key">Member Since</span><span className="p-info-val">{joined}</span></div>
             <div className="p-info-row"><span className="p-info-key">Status</span><span className="p-info-val" style={{ color: "#34d399" }}>● Active</span></div>

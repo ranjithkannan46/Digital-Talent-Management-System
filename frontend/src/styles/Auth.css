@@ -1,60 +1,52 @@
-body {
-  background: #061409;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
+/* Auth page body overrides — scoped to auth-page class only */
 body.auth-page {
   background: #061409;
   min-height: 100vh;
   display: flex;
-  justify-content: center;
-  padding-top: 100px;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 5rem 1rem 2rem;
 }
 .toast {
   position: fixed;
-  top: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 2rem;
+  right: 2rem;
   z-index: 9999;
   display: flex;
   align-items: center;
   gap: .65rem;
-  padding: .85rem 1.4rem;
+  padding: .9rem 1.6rem;
   background: #0a2a10;
-  border: 1px solid rgba(74, 222, 128, .3);
+  border: 1px solid rgba(74, 222, 128, .5);
   border-radius: 12px;
-  font-size: .83rem;
-  font-weight: 500;
-  color: #86efac;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, .5);
-  animation: toastIn .35s cubic-bezier(.22, 1, .36, 1) both;
+  font-size: .88rem;
+  font-weight: 600;
+  color: #fff;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .6);
+  animation: toastIn .4s cubic-bezier(.22, 1, .36, 1) both;
   white-space: nowrap;
 }
 
 .toast-icon {
-  width: 20px;
-  height: 20px;
-  background: rgba(74, 222, 128, .15);
+  width: 22px;
+  height: 22px;
+  background: #16a34a;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: .7rem;
+  font-size: .8rem;
+  color: #fff;
 }
 
 @keyframes toastIn {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(-14px) scale(.95)
+    transform: translateX(30px);
   }
-
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1)
+    transform: translateX(0);
   }
 }
 
@@ -1414,7 +1406,7 @@ body::before {
     justify-content: flex-start;
   }
 
-  body {
+  body.auth-page {
     padding: 0;
   }
 

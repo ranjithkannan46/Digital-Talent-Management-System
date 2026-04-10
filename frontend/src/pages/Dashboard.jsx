@@ -10,15 +10,52 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [user,    setUser]    = useState(null);
   const [tasks,   setTasks]   = useState([]);
+  const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [busyId,  setBusyId]  = useState(null);
   const photo = localStorage.getItem("dtms_photo");
 
+
+  const loadData = async () => {
+    try {
+      const [me, t] = await Promise.all([axios.get("/auth/me"), axios.get("/tasks")]);
+      setUser(me.data.user);
+      setTasks(t.data.tasks);
+
+      // If admin, also load pending users
+      if (me.data.user.role?.toLowerCase() === "admin") {
+        const p = await axios.get("/auth/pending-users");
+        setPending(p.data.users);
+      }
+    } catch (err) {
+      console.error("[Dashboard] Load failed:", err);
+      navigate("/", { replace: true });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    Promise.all([axios.get("/auth/me"), axios.get("/tasks")])
-      .then(([me, t]) => { setUser(me.data.user); setTasks(t.data.tasks); })
-      .catch(() => navigate("/", { replace: true }))
-      .finally(() => setLoading(false));
+    loadData();
   }, [navigate]);
+
+  const handleRefresh = () => {
+    setLoading(true);
+    loadData();
+  };
+
+  const handleApprove = async (id) => {
+    setBusyId(id);
+    try {
+      await axios.put(`/auth/approve-user/${id}`);
+      setPending(p => p.filter(u => u.id !== id));
+      // Optionally reload data if approvals affect other stats
+    } catch (err) {
+      console.error("Approval failed:", err);
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -29,8 +66,13 @@ export default function Dashboard() {
     );
   }
 
-  const role    = fixRole(user?.role);
-  const isAdmin = role === "admin";
+  const displayRole = (r) => {
+    const role = r?.toLowerCase();
+    if (role === "admin") return "Administrator";
+    return "Talent / User";
+  };
+
+  const isAdmin = user?.role?.toLowerCase() === "admin";
   const today   = new Date(); today.setHours(0, 0, 0, 0);
 
   const stats = {
@@ -63,13 +105,24 @@ export default function Dashboard() {
   return (
     <div className="dash">
 
+      {/* Page Header */}
+      <div className="dash-page-header">
+        <div className="dash-page-eyebrow">Digital Talent Management System</div>
+        <div className="dash-page-row">
+          <h1 className="dash-page-title">Dashboard</h1>
+          <span className="dash-page-date">
+            {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </span>
+        </div>
+      </div>
+
       {/* Hero */}
       <div className="hero">
         <div className="hero-bg" />
         <div className="hero-overlay" />
         <div className="hero-body">
           <div>
-            <div className={`hero-tag hero-tag-${role}`}>
+            <div className={`hero-tag ${isAdmin ? 'hero-tag-admin' : 'hero-tag-user'}`}>
               {isAdmin ? "🔑 Administrator" : "👤 Team Member"}
             </div>
             <div className="hero-name">{greet}, {user?.name} 👋</div>
@@ -168,7 +221,9 @@ export default function Dashboard() {
           </div>
           {recent.length === 0 ? (
             <div className="dash-empty">
-              {isAdmin ? "No tasks yet. Create one to get started." : "No tasks assigned to you yet."}
+              <div style={{fontSize:"2rem", marginBottom:".5rem"}}>📔</div>
+              {isAdmin ? "No tasks found in the system. Create your first task to see it here." : "No tasks assigned to you yet. You're all caught up!"}
+              {!isAdmin && <div style={{fontSize:".7rem", color:"rgba(255,255,255,.2)", marginTop:".5rem"}}>New assignments will appear here automatically.</div>}
             </div>
           ) : recent.map(t => {
             const over = isOverdue(t);
@@ -203,7 +258,35 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {isAdmin && pending.length > 0 && (
+            <div className="panel" style={{marginBottom: "2rem"}}>
+              <div className="panel-head">
+                <span className="panel-title">Pending Approvals <span className="panel-cnt">{pending.length}</span></span>
+              </div>
+              <div className="approval-list">
+                {pending.map(u => (
+                  <div key={u.id} className="approval-item">
+                    <div className="ai-info">
+                      <span className="ai-name">{u.name}</span>
+                      <span className="ai-email">{u.email}</span>
+                    </div>
+                    <div className="ai-actions">
+                      <button 
+                        className="btn-approve" 
+                        onClick={() => handleApprove(u.id)}
+                        disabled={busyId === u.id}
+                      >
+                        {busyId === u.id ? "Working..." : "Approve ✓"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {dueSoon.length > 0 && (
+
             <div className="dl-card">
               <div className="dl-head">⚠️ Due Soon</div>
               {dueSoon.map(t => (

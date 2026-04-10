@@ -22,7 +22,6 @@ export default function Layout({ children }) {
  
   useEffect(()=>{
     document.body.classList.remove('auth-page');
-    document.body.style.background = '#0c0f1a';
     loadNotifs();
     const iv=setInterval(loadNotifs,30000);
     return()=>clearInterval(iv);
@@ -40,8 +39,14 @@ export default function Layout({ children }) {
   const loadNotifs=async()=>{ try{const{data}=await axios.get("/notifications");setNotifs(data.notifications);setUnread(data.unread);}catch{} };
   const markAll=async()=>{ try{await axios.put("/notifications/read-all");setNotifs(p=>p.map(n=>({...n,read:true})));setUnread(0);}catch{} };
   const markOne=async id=>{ try{await axios.put(`/notifications/${id}/read`);setNotifs(p=>p.map(n=>n.id===id?{...n,read:true}:n));setUnread(p=>Math.max(0,p-1));}catch{} };
-  const signOut=()=>{localStorage.removeItem("dtms_token");localStorage.removeItem("dtms_user");navigate("/");};
+  const signOut=()=>{localStorage.removeItem("dtms_token");localStorage.removeItem("dtms_user");localStorage.removeItem("dtms_photo");navigate("/");};
   const dotCls=t=>t==="task_assigned"?"nd-dot nd-dot-a":t==="task_completed"?"nd-dot nd-dot-c":t==="task_updated"?"nd-dot nd-dot-u":"nd-dot nd-dot-i";
+
+  const displayRole = (r) => {
+    const role = r?.toLowerCase();
+    if (role === "admin") return "Administrator";
+    return "Talent / User";
+  };
  
   return (
     <div className="app-shell">
@@ -55,15 +60,26 @@ export default function Layout({ children }) {
           <NavLink to="/dashboard" className={({isActive})=>`sb-link${isActive?" on":""}`}><span className="sb-icon">📊</span>Dashboard</NavLink>
           <NavLink to="/tasks"     className={({isActive})=>`sb-link${isActive?" on":""}`}><span className="sb-icon">✅</span>Tasks</NavLink>
  
-          <p className="sb-section" style={{marginTop:".5rem"}}>Account</p>
+          <p className="sb-section sb-section-acc">Account</p>
  
           {/* Notifications */}
-          <div ref={notifRef} style={{position:"relative"}}>
-            <div className="sb-link" style={{cursor:"pointer"}} onClick={()=>{setNotifOpen(p=>!p);setDdOpen(false);}}>
+          <div ref={notifRef} className="sb-item-wrap">
+            <div 
+              className="sb-link pointer" 
+              role="button"
+              tabIndex={0}
+              onClick={(e)=>{
+                e.preventDefault();
+                setNotifOpen(!notifOpen);
+                setDdOpen(false);
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && setNotifOpen(!notifOpen)}
+            >
               <span className="sb-icon">🔔</span>
               Notifications
-              {unread>0&&<span style={{marginLeft:"auto",minWidth:18,height:18,background:"#ef4444",borderRadius:999,fontSize:".6rem",fontWeight:700,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",padding:"0 4px"}}>{unread>9?"9+":unread}</span>}
+              {unread>0&&<span className="sb-notif-badge">{unread>9?"9+":unread}</span>}
             </div>
+
             {notifOpen&&(
               <div className="notif-drawer" style={{top:"auto",bottom:"calc(100% + .4rem)",left:0,right:0,width:"auto"}}>
                 <div className="nd-head">
@@ -85,15 +101,26 @@ export default function Layout({ children }) {
           </div>
  
           {/* Profile */}
-          <div ref={ddRef} style={{position:"relative"}}>
-            <div className="sb-link" style={{cursor:"pointer"}} onClick={()=>{setDdOpen(p=>!p);setNotifOpen(false);}}>
+          <div ref={ddRef} className="sb-item-wrap">
+            <div 
+              className="sb-link pointer" 
+              role="button"
+              tabIndex={0}
+              onClick={(e)=>{
+                e.preventDefault();
+                setDdOpen(!ddOpen);
+                setNotifOpen(false);
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && setDdOpen(!ddOpen)}
+            >
               <div className="sb-user-av">{photo?<img src={photo} alt=""/>:initial}</div>
-              <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{user?.name||"User"}</span>
-              <span style={{marginLeft:"auto",fontSize:".58rem",color:"rgba(255,255,255,.28)",transition:"transform .14s",transform:ddOpen?"rotate(180deg)":"none"}}>▾</span>
+              <span className="sb-user-name">{user?.name||"User"}</span>
+              <span className={`sb-chevron ${ddOpen?'up':''}`}>▾</span>
             </div>
+
             {ddOpen&&(
-              <div className="tb-dd" style={{top:"auto",bottom:"calc(100% + .4rem)",left:".45rem",right:".45rem",minWidth:"auto"}}>
-                <div className="dd-head"><div className="dd-name">{user?.name}</div><div className="dd-role">{role}</div></div>
+              <div className="tb-dd sb-dd-side">
+                <div className="dd-head"><div className="dd-name">{user?.name}</div><div className="dd-role">{displayRole(user?.role)}</div></div>
                 <NavLink to="/profile" className="dd-item" onClick={()=>setDdOpen(false)}>✏️ &nbsp;Edit Profile</NavLink>
                 <div className="dd-sep"/>
                 <div className="dd-item red" onClick={signOut}>↩ &nbsp;Sign Out</div>
